@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, timedelta
+from scipy.spatial.transform import Rotation as R
 
 # Open Maximet data and extract [Time, Wind Speed, Wind Direction]
 maximet_data = []
@@ -25,7 +26,7 @@ with open("Maximet_data/maximet_data.txt", "r") as file:
 # Open the Anemometer data and extract [Time, Position, Rotation]
 meta_data = {}
 mocap_data = []
-with open("Anemometer_data/Anemometer1.csv", newline='', encoding='utf-8') as csvfile:
+with open("data/Anemometer1.csv", newline='', encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
 
     # Read metadata
@@ -79,5 +80,15 @@ for wind_entry in maximet_data:
         "Wind Speed": wind_entry["Wind Speed"],
         "Wind Direction": wind_entry["Wind Direction"]
     })
+
+
+# conver the quaternion angles into euler angles
+for i in range(len(final_data)):
+    f = final_data[i]
+    q = [f["Rotation"]['w'], f["Rotation"]['x'], f["Rotation"]['y'], f["Rotation"]['z']]  # Replace with your quaternion
+    r = R.from_quat(q)
+    euler = r.as_euler('xyz', degrees=True)  # Convert to Euler angles (roll, pitch, yaw)
+    final_data[i][2] = {"Roll":euler[0], "Pitch":euler[1], "Yaw":euler[2]}
+    print(euler)
 
 
