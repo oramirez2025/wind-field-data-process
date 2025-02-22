@@ -33,13 +33,13 @@ with open("data/Anemometer1.csv", newline='', encoding='utf-8') as csvfile:
     line = next(reader)
     for i in range(0, len(line), 2):
         meta_data[line[i]] = line[i + 1]
-    
-    # Skip the next 5 lines
-    for _ in range(5):
-        next(reader)
-    
+
     # Read start time
     start_time = datetime.strptime(meta_data["Capture Start Time"], "%Y-%m-%d %I.%M.%S.%f %p")
+    
+    # Skip the next 6 lines
+    for _ in range(6):
+        next(reader)
     
     # Read motion capture data
     for line in reader:
