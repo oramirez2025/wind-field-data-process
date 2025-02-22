@@ -87,8 +87,14 @@ for i in range(len(final_data)):
     f = final_data[i]
     q = [f["Rotation"]['w'], f["Rotation"]['x'], f["Rotation"]['y'], f["Rotation"]['z']]  # Replace with your quaternion
     r = R.from_quat(q)
-    euler = r.as_euler('xyz', degrees=True)  # Convert to Euler angles (roll, pitch, yaw)
-    final_data[i][2] = {"Roll":euler[0], "Pitch":euler[1], "Yaw":euler[2]}
-    print(euler)
+    euler = r.as_euler('zyx', degrees=True)  # Convert to Euler angles (roll, yaw, pitch)
+    final_data[i]["Rotation"] = {"Roll":euler[0], "Yaw":euler[1], "Pitch":euler[2]}
+    # need to subtract the wind direction from the yaw to move to a different frame convention 
+    # the Roll and Pitch should stay consistent as the yaw is the only frame changing 
+    curr_wind_speed = final_data[i]["Wind Direction"]
+    mocap_yaw = final_data[i]["Rotation"]["Yaw"]
+    final_data[i]["Wind Direction"] = (mocap_yaw - curr_wind_speed) + 360
+    # print(f"current wind speed: {curr_wind_speed}, mocap_yaw: {mocap_yaw}, adjusted wind direction: {(mocap_yaw - curr_wind_speed) + 360}")
+
 
 
