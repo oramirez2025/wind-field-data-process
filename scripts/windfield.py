@@ -53,12 +53,13 @@ with open(anemometer_file_name, newline='', encoding='utf-8') as csvfile:
     # Skip the next 6 lines
     for _ in range(6):
         next(reader)
-    
+    adjusted_hour = ((maximet_data[0]["Time"]).hour) - (start_time.hour)
     # Read motion capture data
     for line in reader:
         time_offset_ms = float(line[1]) * 1000  # Convert seconds to milliseconds
         new_time = start_time + timedelta(milliseconds=time_offset_ms)
-        new_time += timedelta(hours=5)
+        
+        new_time += timedelta(hours=adjusted_hour)
 
         rotation = {"x": line[2], "y": line[3], "z": line[4], "w": line[5]}
         position = {"x": line[6], "y": line[7], "z": line[8]}
@@ -68,7 +69,14 @@ with open(anemometer_file_name, newline='', encoding='utf-8') as csvfile:
 
 # **Ensure Maximet data starts AFTER the first Mocap timestamp**
 first_mocap_time = mocap_data[0]["Time"]
-maximet_data = [entry for entry in maximet_data if entry["Time"] >= first_mocap_time]
+first_maximet_time = maximet_data[0]["Time"]
+
+if (first_maximet_time > first_mocap_time):
+    mocap_data = [entry for entry in mocap_data if entry["Time"] >= first_maximet_time]
+else:
+    maximet_data = [entry for entry in maximet_data if entry["Time"] >= first_mocap_time]
+
+
 
 # **Sync maximet_data with the closest mocap_data**
 final_data = []
@@ -95,6 +103,7 @@ for wind_entry in maximet_data:
     })
 
 
+
 # conver the quaternion angles into euler angles
 for i in range(len(final_data)):
     f = final_data[i]
@@ -111,7 +120,7 @@ for i in range(len(final_data)):
 
 
 
-# Convert what we need into numpy arrays
+# # Convert what we need into numpy arrays
 x = np.array([float(entry["Position"]["x"]) for entry in final_data])
 y = np.array([float(entry["Position"]["y"]) for entry in final_data])
 z = np.array([float(entry["Position"]["z"]) for entry in final_data])
@@ -136,7 +145,7 @@ u = wind_speed * np.cos(wind_direction)
 v = wind_speed * np.sin(wind_direction)
 
 
-##############################################3
+# ##############################################3
 plot_raw_data = True
 # Plot the raw data
 if plot_raw_data:
