@@ -1,3 +1,6 @@
+# the motion capture system started recordind first
+
+
 import csv
 from datetime import datetime, timedelta
 from scipy.spatial.transform import Rotation as R
@@ -8,35 +11,41 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.cm import ScalarMappable
 
-maximet_file_name = "Maximet_data/maximet_data.txt" 
-anemometer_file_name = "data/Anemometer1.csv"
+maximet_file_name = "../data/maximet.txt" 
+anemometer_file_name = "../mc/motion_capture.csv"
 
 # maximet_file_name = "Maximet_data/maximet_data2.txt" 
 # anemometer_file_name = "data/Anemometor2.csv"
 
+def grab_wind_direction(s):
+    return s[17:20]
+
+def grab_wind_speed(s):
+    return s[14:19]
+
+def grab_time(s):
+    return datetime.strptime(s[11:19],"%H:%M:%S") 
 
 # Open Maximet data and extract [Time, Wind Speed, Wind Direction]
 maximet_data = []
-with open(maximet_file_name, "r") as file:
+with open(maximet_file_name, 'r') as file:
     lines = file.readlines()
     for line in lines:
-        parsed = line.split(',')
-        if len(parsed) >= 10:
-            wind_direction = parsed[1]
-            wind_speed = parsed[2]
-            time = parsed[10].strip()
-            
-            # Convert time to datetime and adjust by 2.5 seconds
-            time_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
-            adjusted_time_obj = time_obj + timedelta(seconds=2.5)
-            
+        parsed = line.split('|')
+        wind_direction = grab_wind_direction(parsed[1])
+        wind_speed = grab_wind_speed(parsed[2])
+        time = grab_time(parsed[0])
+        try:
             maximet_data.append({
-                "Time": adjusted_time_obj,
+                "Time": time,
                 "Wind Speed": float(wind_speed),
                 "Wind Direction": float(wind_direction)
-            })
+            }) 
+        except ValueError:
+            continue
 
-# Open the Anemometer data and extract [Time, Position, Rotation]
+
+# # Open the Anemometer data and extract [Time, Position, Rotation]
 meta_data = {}
 mocap_data = []
 with open(anemometer_file_name, newline='', encoding='utf-8') as csvfile:
@@ -48,18 +57,19 @@ with open(anemometer_file_name, newline='', encoding='utf-8') as csvfile:
         meta_data[line[i]] = line[i + 1]
 
     # Read start time
-    start_time = datetime.strptime(meta_data["Capture Start Time"], "%Y-%m-%d %I.%M.%S.%f %p")
+    start_time = datetime.strptime(meta_data["Capture Start Time"][11:23], "%I.%M.%S.%f")
+    start_time += timedelta(hours=12)
     
     # Skip the next 6 lines
     for _ in range(6):
         next(reader)
-    adjusted_hour = ((maximet_data[0]["Time"]).hour) - (start_time.hour)
+    # adjusted_hour = ((maximet_data[0]["Time"]).hour) - (start_time.hour)
     # Read motion capture data
     for line in reader:
         time_offset_ms = float(line[1]) * 1000  # Convert seconds to milliseconds
         new_time = start_time + timedelta(milliseconds=time_offset_ms)
         
-        new_time += timedelta(hours=adjusted_hour)
+        # new_time += timedelta(hours=adjusted_hour)
 
         rotation = {"x": line[2], "y": line[3], "z": line[4], "w": line[5]}
         position = {"x": line[6], "y": line[7], "z": line[8]}
@@ -71,36 +81,43 @@ with open(anemometer_file_name, newline='', encoding='utf-8') as csvfile:
 first_mocap_time = mocap_data[0]["Time"]
 first_maximet_time = maximet_data[0]["Time"]
 
+
+
+
 if (first_maximet_time > first_mocap_time):
     mocap_data = [entry for entry in mocap_data if entry["Time"] >= first_maximet_time]
 else:
     maximet_data = [entry for entry in maximet_data if entry["Time"] >= first_mocap_time]
 
-
-
 # **Sync maximet_data with the closest mocap_data**
 final_data = []
 mocap_index = 0
+
+last_mocap_data = mocap_data[-1]['Time']
 
 for wind_entry in maximet_data:
     wind_time = wind_entry["Time"]
 
     # Find the closest mocap time
-    while mocap_index < len(mocap_data) - 1 and \
-          abs(mocap_data[mocap_index + 1]["Time"] - wind_time) < abs(mocap_data[mocap_index]["Time"] - wind_time):
+    while (mocap_index < len(mocap_data) - 1 and abs(mocap_data[mocap_index + 1]["Time"] - wind_time) < abs(mocap_data[mocap_index]["Time"] - wind_time)):
         mocap_index += 1
 
+    if wind_time > last_mocap_data:
+        break
+
     # Use the closest mocap data
-    closest_mocap = mocap_data[mocap_index]
-    
-    # Store the merged data
-    final_data.append({
-        "Time": wind_time,
-        "Position": closest_mocap["Position"],
-        "Rotation": closest_mocap["Rotation"],
-        "Wind Speed": wind_entry["Wind Speed"],
-        "Wind Direction": wind_entry["Wind Direction"]
-    })
+    if (mocap_index < len(mocap_data)):
+        closest_mocap = mocap_data[mocap_index]
+        
+        # Store the merged data
+        final_data.append({
+            "Time": wind_time,
+            "Position": closest_mocap["Position"],
+            "Rotation": closest_mocap["Rotation"],
+            "Wind Speed": wind_entry["Wind Speed"],
+            "Wind Direction": wind_entry["Wind Direction"]
+        })
+
 
 
 
