@@ -1,4 +1,4 @@
-# the motion capture system started recordind first
+# NOTE: when running this experiment, turn off the motion capture system FIRST then the Maximet 
 
 
 import csv
@@ -11,11 +11,8 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.cm import ScalarMappable
 
-maximet_file_name = "../data/maximet.txt" 
-anemometer_file_name = "../mc/motion_capture.csv"
-
-# maximet_file_name = "Maximet_data/maximet_data2.txt" 
-# anemometer_file_name = "data/Anemometor2.csv"
+maximet_file_name = "../maximet_data/maximet.txt" 
+anemometer_file_name = "../mocap_data/motion_capture.csv"
 
 def grab_wind_direction(s):
     return s[17:20]
