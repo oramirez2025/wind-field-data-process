@@ -169,8 +169,8 @@ if plot_raw_data:
     ax.quiver(x, z, y, u, v, np.zeros_like(z), length=30.5)
 
     ax.set_xlabel("X Position")
-    ax.set_ylabel("Z Position")
-    ax.set_zlabel("Y Position")
+    ax.set_ylabel("Y Position")
+    ax.set_zlabel("Z Position")
     # Set the limits of the plot to the limits of the data
     # ax.set_xlim([-1500 , -2500])
     # ax.set_ylim([np.min(y), np.max(y)])
@@ -232,8 +232,8 @@ cbar = plt.colorbar(sm, ax=ax, shrink=0.7, pad=0.1)
 cbar.set_label("Wind Speed")
 
 ax.set_xlabel("X Position")
-ax.set_ylabel("Z Position")
-ax.set_zlabel("Y Position")
+ax.set_ylabel("Y Position")
+ax.set_zlabel("Z Position")
 ax.axis('equal')
 ax.set_title("Raw 3D Wind Data")
 plt.show()
