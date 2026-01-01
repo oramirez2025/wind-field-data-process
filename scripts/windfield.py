@@ -138,6 +138,7 @@ for i in range(len(final_data)):
 x = np.array([float(entry["Position"]["x"]) for entry in final_data])
 y = np.array([float(entry["Position"]["y"]) for entry in final_data])
 z = np.array([float(entry["Position"]["z"]) for entry in final_data])
+print(np.mean(z))
 wind_direction = np.array([float(entry["Wind Direction"]) for entry in final_data])
 wind_speed = np.array([float(entry["Wind Speed"]) for entry in final_data])
 
@@ -147,10 +148,11 @@ wind_direction = np.arctan2(np.sin(wind_direction), np.cos(wind_direction))  # W
 # wind_direction = np.rad2deg(wind_direction)  # Convert back to degrees
 
 # Remove outliers (you can adjust these thresholds)
-remove_flag = (x > -1500) | (x < -2500) | (y < 0) | (y > 2500) | (z < 0) | (z > 2000)
+remove_flag = (x < -3000) | (x > 1500) | (y < -1000) | (y > 1500) | (z > 2000) | (z < 50)
 x = x[~remove_flag]
 y = y[~remove_flag]
 z = z[~remove_flag]
+print(np.mean(z))
 wind_direction = wind_direction[~remove_flag]
 wind_speed = wind_speed[~remove_flag]
 
@@ -166,7 +168,7 @@ if plot_raw_data:
 
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection="3d")
-    ax.quiver(x, z, y, u, v, np.zeros_like(z), length=30.5)
+    ax.quiver(x, y, z, u, v, np.zeros_like(z), length=30.5)
 
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
@@ -202,10 +204,10 @@ print("Optimized Kernel for Speed:", gp_speed.kernel_)
 print("Optimized Kernel for Direction:", gp_direction.kernel_)
 
 # Create a grid for prediction
-x_pred = np.linspace(-2200, -1700, 10)
-y_pred = np.linspace(800, 1100, 10) # If want 3d plot
+x_pred = np.linspace(-3000, 1500, 20)
+y_pred = np.linspace(0, 1500, 10) # If want 3d plot
 # y_pred = 900
-z_pred = np.linspace(400, 1000, 10) 
+z_pred = np.linspace(50, 2000, 10) 
 X_pred = np.array(np.meshgrid(x_pred, y_pred, z_pred)).T.reshape(-1, 3)
 
 # Predict smoothed u and v
@@ -235,7 +237,7 @@ ax.set_xlabel("X Position")
 ax.set_ylabel("Y Position")
 ax.set_zlabel("Z Position")
 ax.axis('equal')
-ax.set_title("Raw 3D Wind Data")
+ax.set_title("Interpolated 3D Wind Data")
 plt.show()
 
 ######################
@@ -243,9 +245,12 @@ plt.show()
 
 
 # Create a grid for prediction
-x_pred = np.linspace(-2200, -1700, 20)
+x_pred = np.linspace(-3000, 1500, 20)
+# y_pred = np.linspace(-1000,1500,10)
+# z_pred = 600
 y_pred = 900
 z_pred = np.linspace(400, 1000, 20) 
+
 X_pred = np.array(np.meshgrid(x_pred, y_pred, z_pred)).T.reshape(-1, 3)
 
 # Predict smoothed u and v
@@ -264,6 +269,6 @@ plt.quiver(X_pred[:, 0], X_pred[:, 2], u_pred, v_pred,
 
 plt.xlabel("X Position")
 plt.ylabel("Y Position")
-plt.title(f"Wind Vector Field at y = {y_pred}")
+plt.title(f"Wind Vector Field at z = {z_pred}")
 plt.colorbar(label="Wind Speed")
 plt.show()
