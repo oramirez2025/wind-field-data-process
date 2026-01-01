@@ -225,7 +225,7 @@ norm = plt.Normalize(pred_speed.min(), pred_speed.max())  # Normalize colors
 # 3D Plot
 fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection="3d")
-ax.quiver(X_pred[:,0], X_pred[:,2], X_pred[:,1], u_pred, v_pred, np.zeros_like(u_pred), color=cmap(norm(pred_speed)), length=15.5, normalize=False)
+ax.quiver(X_pred[:,0], X_pred[:,1], X_pred[:,2], u_pred, v_pred, np.zeros_like(u_pred), color=cmap(norm(pred_speed)), length=15.5, normalize=False)
 
 # Add colorbar
 sm = ScalarMappable(cmap=cmap, norm=norm)
