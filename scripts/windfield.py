@@ -13,6 +13,7 @@ from matplotlib.cm import ScalarMappable
 
 maximet_file_name = "../maximet_data/maximet.txt" 
 anemometer_file_name = "../mocap_data/motion_capture.csv"
+final_data_file_name = "../final_data/final_data.csv"
 
 def grab_wind_direction(s):
     return s[17:20]
@@ -80,7 +81,6 @@ first_maximet_time = maximet_data[0]["Time"]
 
 
 
-
 if (first_maximet_time > first_mocap_time):
     mocap_data = [entry for entry in mocap_data if entry["Time"] >= first_maximet_time]
 else:
@@ -115,7 +115,27 @@ for wind_entry in maximet_data:
             "Wind Direction": wind_entry["Wind Direction"]
         })
 
+def flatten_record(d):
+    return {
+        "Time": d["Time"].isoformat(),
+        "Pos_x": d["Position"]["x"],
+        "Pos_y": d["Position"]["y"],
+        "Pos_z": d["Position"]["z"],
+        "Rot_x": d["Rotation"]["x"],
+        "Rot_y": d["Rotation"]["y"],
+        "Rot_z": d["Rotation"]["z"],
+        "Rot_w": d["Rotation"]["w"],
+        "Wind Speed": d["Wind Speed"],
+        "Wind Direction": d["Wind Direction"],
+    }
 
+# let's save off this csv data so we can see
+rows = [flatten_record(r) for r in final_data]
+
+with open(final_data_file_name, "w", newline="") as csvfile:
+    writer = csv.DictWriter(csvfile, fieldnames=rows[0].keys())
+    writer.writeheader()
+    writer.writerows(rows)
 
 
 # conver the quaternion angles into euler angles
@@ -259,7 +279,8 @@ X_pred = np.array(np.meshgrid(x_pred, y_pred, z_pred)).T.reshape(-1, 3)
 # Predict smoothed u and v
 pred_speed, sigma_speed = gp_speed.predict(X_pred, return_std=True)
 pred_direction, sigma_direction = gp_direction.predict(X_pred, return_std=True)
-
+pred_direction += (np.pi / 2)
+print(pred_direction)
 # Convert predicted speed and direction to u and v
 u_pred = pred_speed * np.cos(pred_direction)
 v_pred = pred_speed * np.sin(pred_direction)
