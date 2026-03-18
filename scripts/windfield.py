@@ -267,6 +267,13 @@ pred_direction, sigma_direction = gp_direction.predict(X_pred, return_std=True)
 u_pred = pred_speed * np.cos(pred_direction)
 v_pred = pred_speed * np.sin(pred_direction)
 
+mask = (u_pred > 0.01) & (v_pred > 0.01)
+
+X_pred = X_pred[mask]
+u_pred = u_pred[mask]
+v_pred = v_pred[mask]
+pred_speed = pred_speed[mask]
+
 plt.figure(figsize=(10, 8))
 plt.quiver(X_pred[:, 0], X_pred[:, 1], u_pred, v_pred, pred_speed, cmap="viridis", scale=50)
 plt.xlabel("X Position")
@@ -274,3 +281,22 @@ plt.ylabel("Y Position")
 plt.title(f"Wind Vector Field at z = {z_pred}")
 plt.colorbar(label="Wind Speed")
 plt.show()
+
+# Average vector components
+u_mean = np.mean(u_pred)
+v_mean = np.mean(v_pred)
+
+# Average wind speed (magnitude of mean vector)
+avg_speed = np.sqrt(u_mean**2 + v_mean**2)
+
+# Average wind direction (angle of mean vector)
+avg_direction = np.arctan2(v_mean, u_mean)  # radians
+avg_direction_deg = np.rad2deg(avg_direction)
+
+# Normalize to [0, 360)
+if avg_direction_deg < 0:
+    avg_direction_deg += 360
+
+
+print(f"Average Wind Speed: {avg_speed:.3f}")
+print(f"Average Wind Direction: {avg_direction_deg:.2f} degrees")
