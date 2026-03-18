@@ -300,3 +300,8 @@ if avg_direction_deg < 0:
 
 print(f"Average Wind Speed: {avg_speed:.3f}")
 print(f"Average Wind Direction: {avg_direction_deg:.2f} degrees")
+
+ux = np.cos(avg_direction)
+uy = np.sin(avg_direction)
+
+print(f"Average Wind Unit Vector: ({ux:.3f}, {uy:.3f})")
